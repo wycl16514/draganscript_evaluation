@@ -52,9 +52,11 @@ recursiveparsetree: {
         },
 ```
 Now we add using the following command to draw the AST:
+
 ![截屏2024-04-08 12 50 13](https://github.com/wycl16514/draganscript_evaluation/assets/7506958/3b9e44a9-ec7b-4850-8365-465379489ed2)
 
 and the tree structure is like following:
+
 ![截屏2024-04-08 13 35 29](https://github.com/wycl16514/draganscript_evaluation/assets/7506958/0f3ee129-2d13-4ed5-9d14-34149f741805)
 
 

@@ -1,4 +1,4 @@
-![截屏2024-04-08 13 35 29](https://github.com/wycl16514/draganscript_evaluation/assets/7506958/fb129fd7-90f0-460f-9592-01e75bf78546)From this charpter, we begin our journey on evaluation of the code base on AST built by parser at last charter. First we need to fix a bug we left at last section:
+From this charpter, we begin our journey on evaluation of the code base on AST built by parser at last charter. First we need to fix a bug we left at last section:
 ```js
 equality = (parentNode) => {
         //equality -> comparison equality_recursive

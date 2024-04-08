@@ -75,6 +75,7 @@ export default class TreeAdjustVisitor {
 
 we can see the code from RecursiveDescentParser that there are 14 kinds of node it can created: "root", "statement", "expression", "equality", "comparison", "equalityRecursive", "comparisonRecursive",
 "term", "termRecursive", "factor", "factorRecursive", "unary", "unaryRecursive", "primary", then we add 14 methods in TreeAdjustVisitor like following:
+
 ```js
 export default class TreeAdjustVisitor {
     visitRootNode = (parent, node) => { }
@@ -111,7 +112,8 @@ export default class TreeAdjustVisitor {
 
 Then we add a method named "accept(visitor)" for each node created by RecursiveDescentParser, and in the accept method, the node call the conressponding method in the visitor, for example the unary
 node will call visitUnaryNode method for the vistor, therefore we change code in RecursiveDescentParser like following:
-```
+
+```js
  addAcceptForNode = (parent, node) => {
         switch (node.name) {
             case "root":
@@ -209,6 +211,7 @@ of term and term_recursive, we need to do the following:
 3, remove term_recursive node as the child of term node
 
 and we can change the code of TreeAdjustVisitor like this:
+
 ```js
 export default class TreeAdjustVisitor {
     constructor() {
@@ -318,6 +321,7 @@ export default class TreeAdjustVisitor {
 ```
 
 we can see from code above, when we visit node like term, equality, factor, comparison, unary, we remember their parent in the field of parent, when we visit node of term_recursive, equlity_recursive,unary_recursive, we call interChangeParentChild to do the three points we mentioned above. Now we can use the TreeAdjustVisitor to change the structure in termal.jsx:
+
 ```js
 recursiveparsetree: {
             description: 'creating a arithmetic parse tree.',

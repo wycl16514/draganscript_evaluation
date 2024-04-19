@@ -92,3 +92,79 @@ Draw the tree again and we get the following result and it looks more regular th
 
 ![截屏2024-04-19 13 54 10](https://github.com/wycl16514/draganscript_evaluation/assets/7506958/b94ad2e8-957e-486f-9867-29558fdd8521)
 
+Now we can add test cases for unary expression, the first one is unary number literal:
+```js
+ it("should evaluate unary operator -  number literal", () => {
+        let root = createParsingTree("-12.34;")
+        let intepreter = new Intepreter()
+        root.accept(intepreter)
+        expect(root.evalRes).toMatchObject({
+            type: "number",
+            value: -12.34,
+        })
+    })
+```
+run tests and makre sure it fail, then we can add following code to satisfy the case:
+```js
+ visitUnaryRecursiveNode = (parent, node) => {
+        this.visitChildren(node)
+        if (node.attributes.value === "-") {
+            node.evalRes.value = - node.evalRes.value
+        }
+        this.attachEvalResult(parent, node)
+    }
+```
+the change for above code an satisfy the test case, let's test another operatoer that is "!" :
+```js
+ it("should evaluate unary operator ! for true and false boolean", ()=> {
+        let root = createParsingTree("!true;")
+        let intepreter = new Intepreter()
+        root.accept(intepreter)
+        expect(root.evalRes).toMatchObject({
+            type: "boolean",
+            value: false,
+        })
+
+        root = createParsingTree("!false;")
+        intepreter = new Intepreter()
+        root.accept(intepreter)
+        expect(root.evalRes).toMatchObject({
+            type: "boolean",
+            value: true,
+        })
+    })
+```
+The case above is sure to fail, let's add code to make it passed:
+```js
+visitPrimaryNode = (parent, node) => {
+    ...
+    switch (token.token) {
+    ...
+    case Scanner.TRUE:
+        type = "boolean"
+        value = true
+        break
+     case Scanner.FALSE:
+         type = "boolean"
+         value = false
+         break
+        }
+      ...
+}
+
+visitUnaryRecursiveNode = (parent, node) => {
+        this.visitChildren(node)
+        if (node.attributes.value === "-") {
+            node.evalRes.value = - node.evalRes.value
+        }
+
+        if (node.attributes.value === "!") {
+            node.evalRes.value = !node.evalRes.value
+        }
+
+        this.attachEvalResult(parent, node)
+    }
+```
+Adding the code above we can make sure the newly added test case passed. Now comes to the question, how to handle something like -"hello world!" and
+!1.23 ?
+

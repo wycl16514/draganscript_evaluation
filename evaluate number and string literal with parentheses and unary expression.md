@@ -165,6 +165,85 @@ visitUnaryRecursiveNode = (parent, node) => {
         this.attachEvalResult(parent, node)
     }
 ```
-Adding the code above we can make sure the newly added test case passed. Now comes to the question, how to handle something like -"hello world!" and
-!1.23 ?
+
+Adding the code above we can make sure the newly added test case passed. Now comes to the question, how to handle something like -"hello world!" and !1.23 ? For python its error for these expression, "-" with string literal should be evaluation error because most of 
+programming languages are not supporting this, but "!" with anything behide it can be evaluated to a result, for Ruby any thing except 
+nil and false are equivalence to true, therefore expression like !nil, !false will evaluate to true and others are evaluate to false.
+
+Then we can add the following test case:
+```js
+it("should evaluate to false for unary operator ! for expression not nil and false", () => {
+        let root = createParsingTree("!1.23;")
+        let intepreter = new Intepreter()
+        root.accept(intepreter)
+        expect(root.evalRes).toMatchObject({
+            type: "boolean",
+            value: false,
+        })
+
+        root = createParsingTree('!"hello world!";')
+        intepreter = new Intepreter()
+        root.accept(intepreter)
+        expect(root.evalRes).toMatchObject({
+            type: "boolean",
+            value: false,
+        })
+
+        root = createParsingTree("!nil;")
+        intepreter = new Intepreter()
+        root.accept(intepreter)
+        expect(root.evalRes).toMatchObject({
+            type: "boolean",
+            value: true,
+        })
+    })
+```
+run the test command and make sure it fail and we add code to make it pass:
+```js
+visitUnaryRecursiveNode = (parent, node) => {
+        ....
+
+        if (node.attributes.value === "!") {
+            /*
+            !false, !nil evaluate to true and others evaluate to false
+            */
+            if (node.evalRes.type === "NIL") {
+                node.evalRes = {
+                    type: "boolean",
+                    value: true,
+                }
+            }
+            else if (node.evalRes.type === "boolean") {
+                if (node.evalRes.value === false) {
+                    node.evalRes.value = true
+                } else {
+                    node.evalRes.value = false
+                }
+            } else {
+                node.evalRes = {
+                    type: "boolean",
+                    value: false,
+                }
+            }
+
+
+        }
+
+       ...
+    }
+
+visitPrimaryNode = (parent, node) => {
+    ...
+    switch (token.token) {
+    ....
+    case Scanner.NIL:
+        type = "NIL"
+        value = null
+        break
+    }
+    ....
+}
+```
+After the changing of above codes we can make sure the test case passed.
+
 

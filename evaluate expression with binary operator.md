@@ -64,17 +64,7 @@ visitTermRecursiveNode = (parent, node) => {
                     value: leftRes.value - rightRes.value
                 }
                 break
-            case "*":
-                node.evalRes = {
-                    type: type,
-                    value: leftRes.value * rightRes.value
-                }
-            case "/":
-                node.evalRes = {
-                    type: type,
-                    value: leftRes.value / rightRes.value
-                }
-                break
+          
             default:
                 throw new Error(`unknown operator for term_recursive: ${node.attributes.value}`)
         }
@@ -107,6 +97,64 @@ interChangeParentChild = (parent, child) => {
         this.parser.addAcceptForNode(child, parent)
     }
 ```
-After the above changes, we can make sure the newly added test case can be passed.
+After the above changes, we can make sure the newly added test case can be passed. Let's see how can we evaluate operator * and /, 
+first we draw its AST tree like following:
 
+![截屏2024-04-22 15 39 50](https://github.com/wycl16514/draganscript_evaluation/assets/7506958/0f9d387b-0efd-441f-9764-eb5bf4f98fb1)
+
+First we should add the test case first and make sure it fail:
+```js
+ it("should evaluate binary operator * and / correctly", () => {
+        let root = createParsingTree("1.23 * 2;")
+        let intepreter = new Intepreter()
+        root.accept(intepreter)
+        expect(root.evalRes).toMatchObject({
+            type: "number",
+            value: 2.46,
+        })
+
+        root = createParsingTree("2.46 / 1.23;")
+        intepreter = new Intepreter()
+        root.accept(intepreter)
+        expect(root.evalRes).toMatchObject({
+            type: "number",
+            value: 2,
+        })
+    })
+```
+
+From the tree we know we need to handle the operation at node factor_recursive, therefore we will add code like following:
+```js
+ visitFactorRecursviNode = (parent, node) => {
+        this.visitChildren(node)
+        const leftRes = node.children[0].evalRes
+        const rightRes = node.children[1].evalRes
+        if (leftRes.type !== rightRes.type) {
+            //we will handle operation on different type later on
+            throw new Error(`can't do operation ${node.attributes.value} on type:${leftRes.type} and ${right.type}`)
+        }
+
+        const type = "number"
+
+        switch (node.attributes.value) {
+            case '*':
+                node.evalRes = {
+                    type: type,
+                    value: leftRes.value * rightRes.value
+                }
+                break
+            case '/':
+                node.evalRes = {
+                    type: type,
+                    value: leftRes.value / rightRes.value
+                }
+                break
+            default:
+                throw new Error("factor recursive should not be here")
+        }
+
+        this.attachEvalResult(parent, node)
+    }
+```
+Adding the above code we can make sure the test case can be passed.
 

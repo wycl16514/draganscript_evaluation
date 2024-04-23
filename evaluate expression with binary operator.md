@@ -205,35 +205,38 @@ run "npm run test" and make sure the case fail and we add code to make it pass, 
         this.visitChildren(node)
         const leftRes = node.children[0].evalRes
         const rightRes = node.children[1].evalRes
-        const type = "boolean"
-        if (leftRes.type === "nil" && rightRes.type === "nil") {
-            node.evalRes = {
-                type: type,
-                value: true
-            }
-        } else {
-            if (leftRes.type !== rightRes.type) {
-                //nil and class instance in futhure
-                throw new Error("only support equality comparison for the same type")
-            }
-            switch (node.attributes.value) {
-                case "==":
-                    node.evalRes = {
-                        type: type,
-                        value: leftRes.value === rightRes.value
-                    }
-                    break
-                case "!=":
-                    node.evalRes = {
-                        type: type,
-                        value: leftRes.value !== rightRes.value
-                    }
-                    break
-                default:
-                    throw new Error(`equality recursive for unkonwn operator ${node.attributes.value}`)
-            }
+        if (leftRes.type !== "number" || rightRes.type !== "number") {
+            throw new Error("only support comparison for number")
         }
-
+        const type = "boolean"
+        switch (node.attributes.value) {
+            case "<=":
+                node.evalRes = {
+                    type: type,
+                    value: leftRes.value <= rightRes.value
+                }
+                break
+            case "<":
+                node.evalRes = {
+                    type: type,
+                    value: leftRes.value < rightRes.value
+                }
+                break
+            case ">":
+                node.evalRes = {
+                    type: type,
+                    value: leftRes.value > rightRes.value
+                }
+                break
+            case ">=":
+                node.evalRes = {
+                    type: type,
+                    value: leftRes.value >= rightRes.value
+                }
+                break
+            default:
+                throw new Error(`comparison recursive for unknown operator: ${node.attributes.value}`)
+        }
         this.attachEvalResult(parent, node)
    }
 ```
@@ -266,38 +269,38 @@ we add the test case first like following:
 run the case and make sure it fail then we add the following code:
 ```js
  visitEqualityRecursvieNode = (parent, node) => {
-        this.visitChildren(node)
+         this.visitChildren(node)
         const leftRes = node.children[0].evalRes
         const rightRes = node.children[1].evalRes
         const type = "boolean"
-        if (leftRes.type === "NIL" && rightRes.type === "NIL") {
+        if (leftRes.type === "nil" && rightRes.type === "nil") {
             node.evalRes = {
                 type: type,
-                value: true,
+                value: true
+            }
+        } else {
+            if (leftRes.type !== rightRes.type) {
+                //nil and class instance in futhure
+                throw new Error("only support equality comparison for the same type")
+            }
+            switch (node.attributes.value) {
+                case "==":
+                    node.evalRes = {
+                        type: type,
+                        value: leftRes.value === rightRes.value
+                    }
+                    break
+                case "!=":
+                    node.evalRes = {
+                        type: type,
+                        value: leftRes.value !== rightRes.value
+                    }
+                    break
+                default:
+                    throw new Error(`equality recursive for unkonwn operator ${node.attributes.value}`)
             }
         }
 
-        if (leftRes.type !== rightRes.type) {
-            //we may handle nil and class install in futhure
-            throw new Error("only support equality comparsion for the same type")
-        }
-
-        switch (node.attributes.value) {
-            case "==":
-                node.evalRes = {
-                    type: type,
-                    value: leftRes.value === rightRes.value
-                }
-                break
-            case "!=":
-                node.evalRes = {
-                    type: type,
-                    value: leftRes.value !== rightRes
-                }
-                break
-            default:
-                throw new Error(`equality recursive for unknown operator: ${node.attributes.value}`)
-        }
         this.attachEvalResult(parent, node)
     }
 ```

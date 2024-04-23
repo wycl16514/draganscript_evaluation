@@ -156,5 +156,89 @@ From the tree we know we need to handle the operation at node factor_recursive, 
         this.attachEvalResult(parent, node)
     }
 ```
-Adding the above code we can make sure the test case can be passed.
+Adding the above code we can make sure the test case can be passed. Let's see how we do evaluation on comparison operator, we still 
+draw its AST tree first, run the command :
+     recursiveparsetree 2.46>=1.23; 
+then we get the following tree:
 
+![截屏2024-04-23 17 16 14](https://github.com/wycl16514/draganscript_evaluation/assets/7506958/e9fe098a-c9ea-4336-a03e-bc48bf190823)
+
+from the tree we know we should handle the case at node comparison_recursive, let's add test case first:
+```js
+it("should evaluate comparison operator correctly", () => {
+        let root = createParsingTree("2.46>1.23;")
+        let intepreter = new Intepreter()
+        root.accept(intepreter)
+        expect(root.evalRes).toMatchObject({
+            type: "boolean",
+            value: true,
+        })
+
+        root = createParsingTree("1.23 >= 2.46;")
+        intepreter = new Intepreter()
+        root.accept(intepreter)
+        expect(root.evalRes).toMatchObject({
+            type: "boolean",
+            value: false,
+        })
+
+        root = createParsingTree("2.46 < 1.23;")
+        intepreter = new Intepreter()
+        root.accept(intepreter)
+        expect(root.evalRes).toMatchObject({
+            type: "boolean",
+            value: false,
+        })
+
+        root = createParsingTree("1.23 <= 2.46;")
+        intepreter = new Intepreter()
+        root.accept(intepreter)
+        expect(root.evalRes).toMatchObject({
+            type: "boolean",
+            value: true,
+        })
+    })
+```
+run "npm run test" and make sure the case fail and we add code to make it pass, in intepreter.js add the following code:
+```js
+ visitComparisonRecursiveNode = (parent, node) => {
+        this.visitChildren(node)
+        const leftRes = node.children[0].evalRes
+        const rightRes = node.children[1].evalRes
+        //only support comparison for number
+        if (leftRes.type !== "number" || rightRes.type !== "number") {
+            throw new Error("only support comparion for number")
+        }
+        const type = "boolean"
+        switch (node.attributes.value) {
+            case "<=":
+                node.evalRes = {
+                    type: type,
+                    value: leftRes.value <= rightRes.value
+                }
+                break
+            case "<":
+                node.evalRes = {
+                    type: type,
+                    value: leftRes.value < rightRes.value
+                }
+                break
+            case ">":
+                node.evalRes = {
+                    type: type,
+                    value: leftRes.value > rightRes.value
+                }
+                break
+            case ">=":
+                node.evalRes = {
+                    type: type,
+                    value: leftRes.value >= rightRes.value
+                }
+                break
+            default:
+                throw new Error(`comparison recursive for unknown operator ${node.attributes.value}`)
+        }
+        this.attachEvalResult(parent, node)
+    }
+```
+By adding the above code we can make sure the newly add test case can be passed.

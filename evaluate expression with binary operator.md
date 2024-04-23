@@ -241,4 +241,70 @@ run "npm run test" and make sure the case fail and we add code to make it pass, 
         this.attachEvalResult(parent, node)
     }
 ```
-By adding the above code we can make sure the newly add test case can be passed.
+By adding the above code we can make sure the newly add test case can be passed. Finally let's handle equality operatior, we draw its parsing tree
+by following command:
+recursiveparsetree 1.24==2.46;
+then we get the following tree:
+![截屏2024-04-23 18 07 07](https://github.com/wycl16514/draganscript_evaluation/assets/7506958/de2cd6dc-826d-446f-ac80-d94e50b5b027)
+
+we add the test case first like following:
+```js
+ it("should evaluate equality operator correctly", () => {
+        let root = createParsingTree("2.46 == 1.23;")
+        let intepreter = new Intepreter()
+        root.accept(intepreter)
+        expect(root.evalRes).toMatchObject({
+            type: "boolean",
+            value: false,
+        })
+
+        root = createParsingTree("2.46 != 1.23;")
+        intepreter = new Intepreter()
+        root.accept(intepreter)
+        expect(root.evalRes).toMatchObject({
+            type: "boolean",
+            value: true,
+        })
+})
+```
+run the case and make sure it fail then we add the following code:
+```js
+ visitEqualityRecursvieNode = (parent, node) => {
+        this.visitChildren(node)
+        const leftRes = node.children[0].evalRes
+        const rightRes = node.children[1].evalRes
+        const type = "boolean"
+        if (leftRes.type === "NIL" && rightRes.type === "NIL") {
+            node.evalRes = {
+                type: type,
+                value: true,
+            }
+        }
+
+        if (leftRes.type !== rightRes.type) {
+            //we may handle nil and class install in futhure
+            throw new Error("only support equality comparsion for the same type")
+        }
+
+        switch (node.attributes.value) {
+            case "==":
+                node.evalRes = {
+                    type: type,
+                    value: leftRes.value === rightRes.value
+                }
+                break
+            case "!=":
+                node.evalRes = {
+                    type: type,
+                    value: leftRes.value !== rightRes
+                }
+                break
+            default:
+                throw new Error(`equality recursive for unknown operator: ${node.attributes.value}`)
+        }
+        this.attachEvalResult(parent, node)
+    }
+```
+After adding the above code, we can make sure our newly added test case can be passed
+
+

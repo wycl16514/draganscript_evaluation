@@ -452,6 +452,13 @@ it("should report error for incompatible type oeration", () => {
         }
         expect(runCode).toThrow()
 
+        root = createParsingTree('"hello" * "world";')
+        intepreter = new Intepreter()
+        runCode = () => {
+            root.accept(intepreter)
+        }
+        expect(runCode).toThrow()
+
         root = createParsingTree('"hello" == 3;')
         intepreter = new Intepreter()
         runCode = () => {
@@ -506,6 +513,11 @@ run the case and make sure it fails, then we add code to handle it like followin
             case "==":
             case "!=":
                 if (leftRes.type !== rightRes.type) {
+                    throw new Error(`binary operation on different type for ${leftRes.type} and ${rightRes.type} for operation ${op}`)
+                }
+                break
+             case "*":
+                if (leftRes.type !== "number" && rightRes.type !== "number") {
                     throw new Error(`binary operation on different type for ${leftRes.type} and ${rightRes.type} for operation ${op}`)
                 }
                 break

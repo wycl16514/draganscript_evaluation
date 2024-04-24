@@ -304,6 +304,126 @@ run the case and make sure it fail then we add the following code:
         this.attachEvalResult(parent, node)
     }
 ```
-After adding the above code, we can make sure our newly added test case can be passed
+After adding the above code, we can make sure our newly added test case can be passed. Finally let's add support for operation of * and + on number
+and string, and report error if operation can't support type of number and string, first let's add the following test case:
+```js
+ it("should support number and string for operator * and +", () => {
+        let root = createParsingTree('3 + "hello,world!";')
+        let intepreter = new Intepreter()
+        root.accept(intepreter)
+        expect(root.evalRes).toMatchObject({
+            type: "string",
+            value: "3hello,world!",
+        })
 
+        root = createParsingTree('3 *"hello,";')
+        intepreter = new Intepreter()
+        root.accept(intepreter)
+        expect(root.evalRes).toMatchObject({
+            type: "string",
+            value: "hello,hello,hello,",
+        })
+    })
+```
+when we add a number with string, we convert the number into string and do connect them into one string, this is the approch for js, and if a 
+number multiply with a string, then we repeat the string with given times, this is the approch for python, run the test make sure it fail and 
+we add code in intepreter.js to make it passed:
+```js
+ typeIncompatibleError = (leftRes, rightRes, op) => {
+        if (leftRes.type !== rightRes.type) {
+            /*
+            we will handle binary operation on different type such as 123+"hello, world"
+            in later sections
+            */
+            throw new Error(`binary operation on different type for ${leftRes.type} and ${rightRes.type} for operation ${op}`)
+        }
+    }
+
+visitTermRecursiveNode = (parent, node) => {
+        this.visitChildren(node)
+        /*
+        get evaluation result from its children and combine those results 
+        into one according to the operator
+        */
+        const leftRes = node.children[0].evalRes
+        const rightRes = node.children[1].evalRes
+
+        let type = "number"
+        switch (node.attributes.value) {
+            case "+":
+                if (leftRes.type === "number" && rightRes.type === "string") {
+                    leftRes.value = leftRes.value.toString()
+                    type = "string"
+                }
+                if (leftRes.type === "string" && rightRes.type === "number") {
+                    type = "string"
+                    rightRes.value = rightRes.value.toString()
+                }
+
+                node.evalRes = {
+                    type: type,
+                    value: leftRes.value + rightRes.value
+                }
+
+                break
+            case "-":
+                node.evalRes = {
+                    type: type,
+                    value: leftRes.value - rightRes.value
+                }
+                break
+            default:
+                throw new Error(`unknown operator for term_recursive: ${node.attributes.value}`)
+        }
+
+        this.attachEvalResult(parent, node)
+    }
+
+visitFactorRecursviNode = (parent, node) => {
+        this.visitChildren(node)
+        const leftRes = node.children[0].evalRes
+        const rightRes = node.children[1].evalRes
+
+        let type = "number"
+
+        switch (node.attributes.value) {
+            case '*':
+                if (leftRes.type === "number" && rightRes.type === "string") {
+                    type = "string"
+                    node.evalRes = {
+                        type: type,
+                        value: rightRes.value.repeat(leftRes.value)
+                    }
+                } else if (leftRes.type === "string" && rightRes.type === "number") {
+                    type = "string"
+                    node.evalRes = {
+                        type: type,
+                        value: leftRes.value.repeat(rightRes.value)
+                    }
+                }
+                else {
+                    node.evalRes = {
+                        type: type,
+                        value: leftRes.value * rightRes.value
+                    }
+                }
+
+                break
+            case '/':
+                node.evalRes = {
+                    type: type,
+                    value: leftRes.value / rightRes.value
+                }
+                break
+            default:
+                throw new Error("factor recursive should not be here")
+        }
+
+        this.attachEvalResult(parent, node)
+    }
+```
+
+In above code, we pull the checking for type into a single function typeIncompatibleError, we will use it for checking incompatible type for 
+operation in later, and in visitTermRecursiveNode and visitFactorRecursviNode we allow operation + and * on number and string, adding the above
+code, we can make sure the newly added case can be passed.
 

@@ -427,3 +427,127 @@ In above code, we pull the checking for type into a single function typeIncompat
 operation in later, and in visitTermRecursiveNode and visitFactorRecursviNode we allow operation + and * on number and string, adding the above
 code, we can make sure the newly added case can be passed.
 
+At the last step, we need to report error for incompatiable type operation, such as we can't subtract a string with a number or subsract a string with another 
+string. Let's add the test case first:
+```js
+it("should report error for incompatible type oeration", () => {
+        let root = createParsingTree('"hello" - "world";')
+        let intepreter = new Intepreter()
+        let runCode = () => {
+            root.accept(intepreter)
+        }
+        expect(runCode).toThrow()
+
+        root = createParsingTree('"hello" - 3;')
+        intepreter = new Intepreter()
+        runCode = () => {
+            root.accept(intepreter)
+        }
+        expect(runCode).toThrow()
+
+        root = createParsingTree('"hello" / "world";')
+        intepreter = new Intepreter()
+        runCode = () => {
+            root.accept(intepreter)
+        }
+        expect(runCode).toThrow()
+
+        root = createParsingTree('"hello" == 3;')
+        intepreter = new Intepreter()
+        runCode = () => {
+            root.accept(intepreter)
+        }
+        expect(runCode).toThrow()
+
+        root = createParsingTree('"hello" != 3;')
+        intepreter = new Intepreter()
+        runCode = () => {
+            root.accept(intepreter)
+        }
+        expect(runCode).toThrow()
+
+root = createParsingTree('"hello" < 3;')
+        intepreter = new Intepreter()
+        runCode = () => {
+            root.accept(intepreter)
+        }
+        expect(runCode).toThrow()
+
+        root = createParsingTree('"hello" <= 3;')
+        intepreter = new Intepreter()
+        runCode = () => {
+            root.accept(intepreter)
+        }
+        expect(runCode).toThrow()
+
+        root = createParsingTree('"hello" >= 3;')
+        intepreter = new Intepreter()
+        runCode = () => {
+            root.accept(intepreter)
+        }
+        expect(runCode).toThrow()
+
+        root = createParsingTree('"hello" > 3;')
+        intepreter = new Intepreter()
+        runCode = () => {
+            root.accept(intepreter)
+        }
+        expect(runCode).toThrow()
+
+
+    })
+
+```
+
+run the case and make sure it fails, then we add code to handle it like following:
+```js
+    typeIncompatibleError = (leftRes, rightRes, op) => {
+        switch (op) {
+            case "==":
+            case "!=":
+                if (leftRes.type !== rightRes.type) {
+                    throw new Error(`binary operation on different type for ${leftRes.type} and ${rightRes.type} for operation ${op}`)
+                }
+                break
+
+            case "-":
+            case "/":
+            case ">":
+            case ">=":
+            case "<":
+            case "<=":
+                if (leftRes.type !== "number" || rightRes.type !== "number") {
+                    throw new Error(`binary operation on different type for ${leftRes.type} and ${rightRes.type} for operation ${op}`)
+                }
+                break
+        }
+
+    }
+
+ visitTermRecursiveNode = (){
+ ...
+ this.typeIncompatibleError(leftRes, rightRes, node.attributes.value)
+ ..
+ }
+
+visitFactorRecursviNode = (parent, node) => {
+    ...
+   this.typeIncompatibleError(leftRes, rightRes, node.attributes.value)
+    ...
+}
+
+visitEqualityRecursvieNode = (parent, node) => {
+  ...
+  this.typeIncompatibleError(leftRes, rightRes, node.attributes.value)
+  ...
+}
+
+visitComparisonRecursiveNode = (parent, node) => {
+   ...
+   this.typeIncompatibleError(leftRes, rightRes, node.attributes.value)
+   ...
+ }
+```
+
+After adding the above code we can make sure the test case can be passed
+

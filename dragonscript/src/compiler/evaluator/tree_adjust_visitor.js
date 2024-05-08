@@ -1,22 +1,16 @@
 import RecursiveDescentParser from "../parser/recursive_descent_parser"
 
 export default class TreeAdjustVisitor {
-
     constructor() {
         this.parser = new RecursiveDescentParser("")
     }
-
 
     visitChildren = (node) => {
         for (const child of node.children) {
             child.accept(this)
         }
     }
-    /*
-    1. change the child of comparison from term to termRecursive
-    2, change term to be the child of termRecursive
-    3, remove termRecursive as child of the term
-    */
+
     findNodeInChildren = (parent, child) => {
         for (let i = 0; i < parent.children.length; i++) {
             if (parent.children[i] === child) {
@@ -28,25 +22,44 @@ export default class TreeAdjustVisitor {
     }
 
     interChangeParentChild = (parent, child) => {
-        const grandfather = parent.parent
-        let idx = this.findNodeInChildren(grandfather, parent)
-        grandfather.children[idx] = child
+        //interchange the position of parent and child
+        const grandFather = parent.parent
+        let idx = this.findNodeInChildren(grandFather, parent)
+        grandFather.children[idx] = child
+        //fix the parent should be the first child
         //child.children.push(parent)
         child.children.unshift(parent)
-
+        //remove child from parent
         idx = this.findNodeInChildren(parent, child)
         parent.children.splice(idx, 1)
 
-        this.parser.addAcceptForNode(grandfather, child)
+        /*
+        after interchange, parent becomes the child of the input child
+        and we need to readjust tis accept method
+        */
+        this.parser.addAcceptForNode(grandFather, child)
         this.parser.addAcceptForNode(child, parent)
-
     }
+
 
     visitRootNode = (parent, node) => {
         this.visitChildren(node)
     }
 
     visitStatementNode = (parent, node) => {
+        node.parent = parent
+        this.visitChildren(node)
+    }
+
+    visitProgramNode = (parent, node) => {
+        this.visitChildren(node)
+    }
+
+    visitStatementRecursiveNode = (parent, node) => {
+        this.visitChildren(node)
+    }
+
+    visitPrintStatementNode = (parent, node) => {
         this.visitChildren(node)
     }
 
@@ -64,16 +77,15 @@ export default class TreeAdjustVisitor {
         this.visitChildren(node)
     }
 
-    visitEqualityRecursiveNode = (parent, node) => {
-        this.interChangeParentChild(parent, node)
-
+    visitEqualityRecursvieNode = (parent, node) => {
         this.visitChildren(node)
+
+        this.interChangeParentChild(parent, node)
     }
 
     visitComparisonRecursiveNode = (parent, node) => {
-        this.interChangeParentChild(parent, node)
-
         this.visitChildren(node)
+        this.interChangeParentChild(parent, node)
     }
 
     visitTermNode = (parent, node) => {
@@ -82,9 +94,9 @@ export default class TreeAdjustVisitor {
     }
 
     visitTermRecursiveNode = (parent, node) => {
-        this.interChangeParentChild(parent, node)
-
         this.visitChildren(node)
+
+        this.interChangeParentChild(parent, node)
     }
 
     visitFactorNode = (parent, node) => {
@@ -92,10 +104,10 @@ export default class TreeAdjustVisitor {
         this.visitChildren(node)
     }
 
-    visitFactorRecursiveNode = (parent, node) => {
-        this.interChangeParentChild(parent, node)
-
+    visitFactorRecursviNode = (parent, node) => {
         this.visitChildren(node)
+
+        this.interChangeParentChild(parent, node)
     }
 
     visitUnaryNode = (parent, node) => {
@@ -104,9 +116,14 @@ export default class TreeAdjustVisitor {
     }
 
     visitUnaryRecursiveNode = (parent, node) => {
+        //we don't need to adjust the tree for unary operation
+        // this.interChangeParentChild(parent, node)
+        // this.visitChildren(node)
         node.parent = parent
         this.visitChildren(node)
     }
 
-    visitPrimaryNode = (parent, node) => { }
+    visitPrimaryNode = (parent, node) => {
+
+    }
 }
